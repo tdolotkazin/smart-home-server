@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"home-server/handlers/getPerson"
+	"home-server/handlers/getAllSensorsData"
 	"home-server/handlers/saveSensorData"
 )
 
@@ -12,7 +12,7 @@ func main() {
 		return ctx.SendString("This is main page =)")
 	})
 	app.Post("/sensor", saveSensorData.SaveSensorData)
-	app.Get("/person/:id?", getPerson.GetPerson)
+	app.Get("/allSensors", getAllSensorsData.GetAllSensorsData)
 	app.Post("/person", createPerson)
 	app.Put("/person/:id", updatePerson)
 	app.Delete("/person/:id", deletePerson)
