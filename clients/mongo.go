@@ -109,10 +109,14 @@ func ReadLatestData() models.SensorDataOut {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var lastRecord models.SensorDataOut
+	var lastRecord models.SensorDataMongo
 	opts := options.FindOne().SetSort(bson.M{"$natural": -1})
 	if err := collection.FindOne(ctx, bson.M{}, opts).Decode(&lastRecord); err != nil {
 		log.Fatal(err)
 	}
-	return lastRecord
+	return models.SensorDataOut{
+		Temperature: lastRecord.Temperature,
+		Humidity:    lastRecord.Humidity,
+		Time:        lastRecord.Time.Time(),
+	}
 }
