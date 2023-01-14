@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"home-server/models"
+	"log"
 	"time"
 )
 
@@ -94,4 +95,24 @@ func ReadSensorsData() []models.SensorDataOut {
 		dtoResults = append(dtoResults, singleRecord)
 	}
 	return dtoResults
+}
+
+func ReadLatestData() models.SensorDataOut {
+	client, ctx := getClient()
+	defer func() {
+		if err := client.Disconnect(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	collection := getCollection(client)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var lastRecord models.SensorDataOut
+	opts := options.FindOne().SetSort(bson.M{"$natural": -1})
+	if err := collection.FindOne(ctx, bson.M{}, opts).Decode(&lastRecord); err != nil {
+		log.Fatal(err)
+	}
+	return lastRecord
 }
