@@ -9,13 +9,18 @@ import (
 )
 
 func SaveSensorData(c *fiber.Ctx) error {
-	data := new(models.SensorData)
+	data := new(models.SensorDataIn)
 	if err := c.QueryParser(data); err != nil {
 		return err
 	}
 	fmt.Printf("%s, temp: %f, hum: %f", time.Now(), data.Temperature, data.Humidity)
 	fmt.Println()
-	resultId, err := clients.WriteSensorData(data)
+	dataWithTime := models.SensorDataOut{
+		Temperature: data.Temperature,
+		Humidity:    data.Humidity,
+		Time:        time.Now(),
+	}
+	resultId, err := clients.WriteSensorData(&dataWithTime)
 	err = c.SendString("Data is not saved ((")
 	if err != nil {
 		return err

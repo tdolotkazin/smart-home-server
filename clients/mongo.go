@@ -2,8 +2,8 @@ package clients
 
 import (
 	"context"
-	"encoding/json"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -30,7 +30,7 @@ func getCollection(client *mongo.Client) *mongo.Collection {
 	return collection
 }
 
-func WriteSensorData(data *models.SensorData) (result interface{}, err error) {
+func WriteSensorData(data *models.SensorDataOut) (result interface{}, err error) {
 	client, ctx := getClient()
 	defer func() {
 		if err = client.Disconnect(ctx); err != nil {
@@ -44,7 +44,8 @@ func WriteSensorData(data *models.SensorData) (result interface{}, err error) {
 	defer cancel()
 	res, err := collection.InsertOne(ctx, bson.D{
 		{"temperature", data.Temperature},
-		{"humidity", data.Humidity}})
+		{"humidity", data.Humidity},
+		{"time", primitive.NewDateTimeFromTime(data.Time)}})
 	if err != nil {
 		return
 	}
@@ -52,7 +53,7 @@ func WriteSensorData(data *models.SensorData) (result interface{}, err error) {
 	return
 }
 
-func ReadSensorsData() []models.SensorData {
+func ReadSensorsData() []models.SensorDataOut {
 	client, ctx := getClient()
 	defer func() {
 		if err := client.Disconnect(ctx); err != nil {
@@ -70,17 +71,27 @@ func ReadSensorsData() []models.SensorData {
 		panic(err)
 	}
 
-	var results []models.SensorData
+	var results []models.SensorDataMongo
 	if err = cursor.All(context.TODO(), &results); err != nil {
 		panic(err)
 	}
-
-	for _, result := range results {
-		err := cursor.Decode(&result)
-		output, err := json.MarshalIndent(result, "", "    ")
+	for cursor.Next(ctx) {
+		var data models.SensorDataMongo
+		err := cursor.Decode(&data)
 		if err != nil {
 			panic(err)
 		}
+		results = append(results, data)
 	}
-	return results
+
+	var dtoResults []models.SensorDataOut
+	for _, data := range results {
+		singleRecord := models.SensorDataOut{
+			Temperature: data.Temperature,
+			Humidity:    data.Humidity,
+			Time:        data.Time.Time(),
+		}
+		dtoResults = append(dtoResults, singleRecord)
+	}
+	return dtoResults
 }
