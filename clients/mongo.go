@@ -54,7 +54,7 @@ func WriteSensorData(data *models.SensorDataOut) (result interface{}, err error)
 	return
 }
 
-func ReadSensorsData() []models.SensorDataOut {
+func ReadSensorsData(days int) []models.SensorDataOut {
 	client, ctx := getClient()
 	defer func() {
 		if err := client.Disconnect(ctx); err != nil {
@@ -66,7 +66,8 @@ func ReadSensorsData() []models.SensorDataOut {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	filter := bson.D{}
+	filter := bson.M{
+		"time": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -days))}}
 	cursor, err := collection.Find(ctx, filter)
 	if err != nil {
 		panic(err)
