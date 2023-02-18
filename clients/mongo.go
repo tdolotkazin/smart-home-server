@@ -121,7 +121,7 @@ func ReadSensorsData(days int) []models.SensorDataOut {
 	return dtoResults
 }
 
-func ReadLatestData() models.SensorDataOut {
+func ReadLatestData() models.LatestData {
 	client, ctx := getClient()
 	defer func() {
 		if err := client.Disconnect(ctx); err != nil {
@@ -133,14 +133,25 @@ func ReadLatestData() models.SensorDataOut {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var lastRecord models.SensorDataMongo
+	var lastSensorRecord models.SensorDataMongo
 	opts := options.FindOne().SetSort(bson.M{"$natural": -1})
-	if err := collection.FindOne(ctx, bson.M{}, opts).Decode(&lastRecord); err != nil {
+	if err := collection.FindOne(ctx, bson.M{}, opts).Decode(&lastSensorRecord); err != nil {
 		log.Fatal(err)
 	}
-	return models.SensorDataOut{
-		Temperature: lastRecord.Temperature,
-		Humidity:    lastRecord.Humidity,
-		Time:        lastRecord.Time.Time(),
+
+	collection = client.Database("test").Collection("boilerData")
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var lastBoilerRecord models.BoilerDataMongo
+	opts = options.FindOne().SetSort(bson.M{"$natural": -1})
+	if err := collection.FindOne(ctx, bson.M{}, opts).Decode(&lastBoilerRecord); err != nil {
+		log.Fatal(err)
+	}
+	return models.LatestData{
+		Temperature:      lastSensorRecord.Temperature,
+		Humidity:         lastSensorRecord.Humidity,
+		WaterTemperature: lastBoilerRecord.WaterTemperature,
+		IsRunning:        lastBoilerRecord.IsRunning,
+		Time:             time.Time{},
 	}
 }
