@@ -54,6 +54,29 @@ func WriteSensorData(data *models.SensorDataOut) (result interface{}, err error)
 	return
 }
 
+func WriteBoilerData(data *models.BoilerDataOut) (result interface{}, err error) {
+	client, ctx := getClient()
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	collection := client.Database("test").Collection("boilerData")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	res, err := collection.InsertOne(ctx, bson.D{
+		{"waterTemperature", data.WaterTemperature},
+		{"isRunning", data.IsRunning},
+		{"time", primitive.NewDateTimeFromTime(data.Time)}})
+	if err != nil {
+		return
+	}
+	result = res.InsertedID
+	return
+}
+
 func ReadSensorsData(days int) []models.SensorDataOut {
 	client, ctx := getClient()
 	defer func() {
