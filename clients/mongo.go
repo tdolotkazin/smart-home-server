@@ -152,6 +152,6 @@ func ReadLatestData() models.LatestData {
 		Humidity:         lastSensorRecord.Humidity,
 		WaterTemperature: lastBoilerRecord.WaterTemperature,
 		IsRunning:        lastBoilerRecord.IsRunning,
-		Time:             time.Time{},
+		Time:             lastSensorRecord.Time.Time(),
 	}
 }
