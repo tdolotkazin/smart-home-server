@@ -77,7 +77,7 @@ func WriteBoilerData(data *models.BoilerDataOut) (result interface{}, err error)
 	return
 }
 
-func ReadSensorsData(days int) []models.SensorDataOut {
+func ReadSensorsData(from time.Time, to time.Time) []models.SensorDataOut {
 	client, ctx := getClient()
 	defer func() {
 		if err := client.Disconnect(ctx); err != nil {
@@ -90,7 +90,7 @@ func ReadSensorsData(days int) []models.SensorDataOut {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	filter := bson.M{
-		"time": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -days))}}
+		"time": bson.M{"$gte": from, "$lt": to}}
 	cursor, err := collection.Find(ctx, filter)
 	if err != nil {
 		panic(err)
@@ -118,10 +118,56 @@ func ReadSensorsData(days int) []models.SensorDataOut {
 		}
 		dtoResults = append(dtoResults, singleRecord)
 	}
+
 	return dtoResults
 }
 
-func ReadLatestData() models.LatestData {
+func ReadBoilerData(from time.Time, to time.Time) []models.BoilerDataOut {
+	client, ctx := getClient()
+	defer func() {
+		if err := client.Disconnect(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	collection := client.Database("test").Collection("sensorData")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	filter := bson.M{
+		"time": bson.M{"$gte": from, "$lt": to}}
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		panic(err)
+	}
+
+	var results []models.BoilerDataMongo
+	if err = cursor.All(context.TODO(), &results); err != nil {
+		panic(err)
+	}
+	for cursor.Next(ctx) {
+		var data models.BoilerDataMongo
+		err := cursor.Decode(&data)
+		if err != nil {
+			panic(err)
+		}
+		results = append(results, data)
+	}
+
+	var dtoResults []models.BoilerDataOut
+	for _, data := range results {
+		singleRecord := models.BoilerDataOut{
+			WaterTemperature: data.WaterTemperature,
+			IsRunning:        data.IsRunning,
+			Time:             data.Time.Time(),
+		}
+		dtoResults = append(dtoResults, singleRecord)
+	}
+
+	return dtoResults
+}
+
+func ReadLatestData() models.AllData {
 	client, ctx := getClient()
 	defer func() {
 		if err := client.Disconnect(ctx); err != nil {
@@ -147,7 +193,7 @@ func ReadLatestData() models.LatestData {
 	if err := collection.FindOne(ctx, bson.M{}, opts).Decode(&lastBoilerRecord); err != nil {
 		log.Fatal(err)
 	}
-	return models.LatestData{
+	return models.AllData{
 		Temperature:           lastSensorRecord.Temperature,
 		Humidity:              lastSensorRecord.Humidity,
 		BaseLastUpdatedTime:   lastSensorRecord.Time.Time(),

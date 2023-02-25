@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type LatestData struct {
+type AllData struct {
 	Temperature           float32   `json:"temp"`
 	Humidity              float32   `json:"hum"`
 	BaseLastUpdatedTime   time.Time `json:"baseLastUpdatedTime"`

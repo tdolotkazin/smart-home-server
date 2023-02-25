@@ -1,4 +1,4 @@
-package getAllSensorsData
+package getAllBoilerData
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func GetAllSensorsData(c *fiber.Ctx) error {
+func GetAllBoilerData(c *fiber.Ctx) error {
 	from := c.Query("from")
 	fromDate, err := time.Parse("2006-01-02", from)
 	if err != nil {
@@ -18,7 +18,7 @@ func GetAllSensorsData(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	result := clients.ReadSensorsData(fromDate, toDate)
+	result := clients.ReadBoilerData(fromDate, toDate)
 
 	jsonData, err := json.Marshal(result)
 	if err != nil {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"home-server/handlers/getAllBoilerData"
 	"home-server/handlers/getAllSensorsData"
 	"home-server/handlers/latestData"
 	"home-server/handlers/saveBoilerData"
@@ -16,6 +17,7 @@ func main() {
 	app.Post("/sensor", saveSensorData.SaveSensorData)
 	app.Post("/boiler", saveBoilerData.SaveBoilerData)
 	app.Get("/allSensors", getAllSensorsData.GetAllSensorsData)
+	app.Get("/allBoiler", getAllBoilerData.GetAllBoilerData)
 	app.Get("/latestData", latestData.LatestData)
-	app.Listen("0.0.0.0:8000")
+	app.Listen("localhost:8000")
 }
