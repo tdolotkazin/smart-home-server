@@ -130,7 +130,7 @@ func ReadBoilerData(from time.Time, to time.Time) []models.BoilerDataOut {
 		}
 	}()
 
-	collection := client.Database("test").Collection("sensorData")
+	collection := client.Database("test").Collection("boilerData")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
