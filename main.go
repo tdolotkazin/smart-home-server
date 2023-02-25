@@ -19,5 +19,5 @@ func main() {
 	app.Get("/allSensors", getAllSensorsData.GetAllSensorsData)
 	app.Get("/allBoiler", getAllBoilerData.GetAllBoilerData)
 	app.Get("/latestData", latestData.LatestData)
-	app.Listen("localhost:8000")
+	app.Listen("0.0.0.0:8000")
 }
